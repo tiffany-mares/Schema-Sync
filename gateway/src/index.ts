@@ -51,7 +51,9 @@ app.get("/health", (_req, res) => {
 });
 
 const server = createServer(app);
-const wss = new WebSocketServer({ server, path: "/ws" });
+// Path is /board (not /ws): vite/TanStack dev servers use /ws for HMR, and a
+// proxy rule for /ws would swallow their socket and cause reload loops.
+const wss = new WebSocketServer({ server, path: "/board" });
 
 wss.on("connection", (ws) => {
   ws.send(JSON.stringify({ type: "hello" }));

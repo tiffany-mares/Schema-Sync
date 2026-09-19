@@ -13,8 +13,8 @@ SchemaSync — "GitHub for your database" — built for Hack the North 2026. Sch
 Six services, three data stores. The browser talks only to the gateway.
 
 ```
-web (React/react-flow :5173)
-  └─ gateway (Node/TS :3000) — REST proxy, WebSocket /ws, Atlas change-stream relay, GitHub webhook
+web (TanStack Start + react-flow + shadcn :5173)
+  └─ gateway (Node/TS :3000) — REST proxy, WebSocket /board, Atlas change-stream relay, GitHub webhook
        ├─ vcs (Python/FastAPI :8000) — commits, branches, merge requests, rename detector
        │    └─ core (Rust via PyO3) — pg_query parse, normalize, semantic diff
        ├─ migrator (Go :8081) — ALTER SQL generation + dry-run
@@ -66,3 +66,11 @@ The single test that proves the pipeline: **round-trip** — for schemas A and B
 36-hour build with two protected demo floors: **hour 13** = version control + visual ER diff working; **hour 21** = full demo driven by scripted agent messages (no live AI). Cut order if behind: Atlas Vector Search → rename detector → Linear tickets → live Leader (fall back to fixed Swarmflow order). **Never cut**: the Rust diff, the ER view, the Go dry-run, or the Impact Scout (the Scout→Engineer negotiation is the Huawei collaboration moment).
 
 Known gap flagged during planning: a **snapshot → DDL renderer** (inverse of the parser) is needed to feed `base_schema` to dry-runs and to run the round-trip test, but isn't in the repo layout or timeline yet.
+
+## Frontend traps (learned the hard way)
+
+- The gateway's live socket is **`/board`, never `/ws`** — vite/TanStack dev servers own `/ws` for HMR, and proxying it causes reload loops.
+- The browser connects to the gateway WS **directly** (`:3000/board`); vite's ws proxying is unreliable. HTTP `/api` stays proxied.
+- `web/vite.config.ts` has **`hmr: false`**: something on this machine kills WebSockets every ~60s and vite responds to reconnects with full page reloads. Edit + manual refresh.
+- Chrome **throttles hidden tabs** to one timer tick per minute — a backgrounded demo tab looks "frozen" and reload-loops. Keep the demo tab visible; this is a browser behavior, not an app bug.
+- Do not reintroduce `@lovable.dev/vite-tanstack-config` — its hmr-gate/sandbox machinery misbehaves outside the Lovable editor. The plain TanStack Start config in `web/vite.config.ts` is intentional.

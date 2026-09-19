@@ -165,6 +165,38 @@ async def list_branches(repo: str):
     return [{"name": r["name"], "head": r["head"]} for r in rows]
 
 
+@app.get("/repos/{repo}/commits")
+async def list_commits(repo: str, branch: str = Query(), limit: int = 50):
+    """First-parent history of a branch, oldest first, each with its schema —
+    this feeds the UI's commit timeline scrubber."""
+    async with app.state.pool.acquire() as conn:
+        rid = await repo_id_for(conn, repo)
+        head, _ = await branch_snapshot(app, conn, rid, branch)
+        chain: list[dict] = []
+        cursor = head
+        while cursor and len(chain) < limit:
+            row = await conn.fetchrow(
+                "select hash, parent_hashes, snapshot_hash, message, created_at "
+                "from commits where hash = $1",
+                cursor,
+            )
+            if not row:
+                break
+            chain.append(dict(row))
+            cursor = row["parent_hashes"][0] if row["parent_hashes"] else None
+    chain.reverse()
+    out = []
+    for c in chain:
+        schema = json.loads(await snapshot_json(app, c["snapshot_hash"]))
+        out.append({
+            "hash": c["hash"],
+            "message": c["message"],
+            "created_at": c["created_at"].isoformat(),
+            "schema": schema,
+        })
+    return out
+
+
 class MergeRequestIn(BaseModel):
     source: str
     target: str

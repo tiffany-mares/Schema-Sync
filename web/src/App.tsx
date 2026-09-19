@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchBranches, fetchDiff } from "./api";
 import { buildView, type TableView } from "./diffView";
+import { ReviewPanel } from "./ReviewPanel";
 import { SchemaFlow } from "./SchemaFlow";
 import "./App.css";
 
@@ -61,7 +62,10 @@ export default function App() {
         </span>
         {error && <span className="error">{error}</span>}
       </header>
-      <main className="canvas">{view && <SchemaFlow tables={view} />}</main>
+      <div className="content">
+        <main className="canvas">{view && <SchemaFlow tables={view} />}</main>
+        <ReviewPanel source={to} target={from} />
+      </div>
     </div>
   );
 }

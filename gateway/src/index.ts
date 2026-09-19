@@ -21,10 +21,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Proxy /api/* to the vcs service. Body is streamed through untouched, so no
-// json middleware here — it would consume the stream.
+const AGENTS_URL = process.env.AGENTS_URL ?? "http://127.0.0.1:8090";
+
+// Proxy /api/* to the owning service. Body is streamed through untouched, so
+// no json middleware here — it would consume the stream.
 app.use("/api", async (req, res) => {
-  const url = VCS_URL + req.originalUrl.replace(/^\/api/, "");
+  const path = req.originalUrl.replace(/^\/api/, "");
+  const upstreamBase = path.startsWith("/reviews") ? AGENTS_URL : VCS_URL;
+  const url = upstreamBase + path;
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(chunk as Buffer);
   const hasBody = chunks.length > 0 && !["GET", "HEAD"].includes(req.method);

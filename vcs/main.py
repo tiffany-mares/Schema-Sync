@@ -165,6 +165,95 @@ async def list_branches(repo: str):
     return [{"name": r["name"], "head": r["head"]} for r in rows]
 
 
+class MergeRequestIn(BaseModel):
+    source: str
+    target: str
+
+
+async def ancestors(conn, head: str) -> list[str]:
+    """All ancestor hashes of a commit, nearest first (BFS over parents)."""
+    seen: list[str] = []
+    frontier = [head]
+    visited = set()
+    while frontier:
+        row = await conn.fetch(
+            "select hash, parent_hashes from commits where hash = any($1::char(64)[])", frontier
+        )
+        nxt: list[str] = []
+        for r in row:
+            if r["hash"] in visited:
+                continue
+            visited.add(r["hash"])
+            seen.append(r["hash"])
+            nxt.extend(r["parent_hashes"])
+        frontier = [h for h in nxt if h not in visited]
+    return seen
+
+
+def change_targets(changes: list[dict]) -> dict[tuple, dict]:
+    """Map each change to the (table, column) it touches for conflict checks."""
+    out = {}
+    for ch in changes:
+        kind = ch["kind"]
+        if kind in ("AddTable", "DropTable"):
+            name = ch["table"]["name"] if kind == "AddTable" else ch["name"]
+            out[(name, None)] = ch
+        else:
+            col = ch.get("column")
+            col_name = col["name"] if isinstance(col, dict) else col
+            out[(ch["table"], col_name)] = ch
+    return out
+
+
+@app.post("/repos/{repo}/merge-requests", status_code=201)
+async def create_merge_request(repo: str, body: MergeRequestIn):
+    async with app.state.pool.acquire() as conn:
+        rid = await repo_id_for(conn, repo)
+        src_head, src_snap = await branch_snapshot(app, conn, rid, body.source)
+        tgt_head, tgt_snap = await branch_snapshot(app, conn, rid, body.target)
+
+        src_anc = await ancestors(conn, src_head)
+        tgt_anc = set(await ancestors(conn, tgt_head))
+        base = next((h for h in src_anc if h in tgt_anc), None)
+        if base is None:
+            raise HTTPException(409, "branches share no common ancestor")
+
+        base_snap = await conn.fetchval(
+            "select snapshot_hash from commits where hash = $1", base
+        )
+        base_json = await snapshot_json(app, base_snap)
+        src_changes = json.loads(core.diff_json(base_json, await snapshot_json(app, src_snap)))
+        tgt_changes = json.loads(core.diff_json(base_json, await snapshot_json(app, tgt_snap)))
+
+        conflicts = []
+        tgt_map = change_targets(tgt_changes)
+        for key, ch in change_targets(src_changes).items():
+            other = tgt_map.get(key)
+            if other is not None and other != ch:
+                conflicts.append({"table": key[0], "column": key[1], "source": ch, "target": other})
+
+        row = await conn.fetchrow(
+            "insert into merge_requests(repo_id, source, target, base_commit) "
+            "values($1, $2, $3, $4) returning id",
+            rid, body.source, body.target, base,
+        )
+    return {"id": row["id"], "base_commit": base, "conflicts": conflicts}
+
+
+@app.get("/repos/{repo}/merge-requests/{mr_id}")
+async def get_merge_request(repo: str, mr_id: int):
+    async with app.state.pool.acquire() as conn:
+        rid = await repo_id_for(conn, repo)
+        row = await conn.fetchrow(
+            "select id, source, target, base_commit, status, verdict "
+            "from merge_requests where id = $1 and repo_id = $2",
+            mr_id, rid,
+        )
+    if not row:
+        raise HTTPException(404, f"merge request {mr_id} not found")
+    return dict(row)
+
+
 @app.get("/health")
 async def health():
     return {"ok": True}

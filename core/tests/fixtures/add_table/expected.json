@@ -1,0 +1,18 @@
+[
+  {
+    "kind": "AddTable",
+    "table": {
+      "name": "transactions",
+      "columns": [
+        { "name": "id", "type_name": "serial", "not_null": true, "default": null },
+        { "name": "user_id", "type_name": "int4", "not_null": true, "default": null },
+        { "name": "amount", "type_name": "numeric(12,2)", "not_null": true, "default": null },
+        { "name": "created_at", "type_name": "timestamptz", "not_null": false, "default": "now()" }
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": [
+        { "columns": ["user_id"], "ref_table": "users", "ref_columns": ["id"] }
+      ]
+    }
+  }
+]

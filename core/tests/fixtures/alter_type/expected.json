@@ -1,0 +1,3 @@
+[
+  { "kind": "AlterColumnType", "table": "products", "column": "price", "from": "int4", "to": "numeric(10,2)" }
+]

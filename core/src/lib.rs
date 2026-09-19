@@ -1,14 +1,28 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+pub mod diff;
+pub mod model;
+pub mod parse;
+
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+
+#[pyfunction]
+fn parse_schema_json(sql: &str) -> PyResult<String> {
+    let schema = parse::parse_schema(sql).map_err(PyValueError::new_err)?;
+    Ok(serde_json::to_string(&schema).expect("schema serializes"))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[pyfunction]
+fn diff_json(old_json: &str, new_json: &str) -> PyResult<String> {
+    let old: model::Schema =
+        serde_json::from_str(old_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let new: model::Schema =
+        serde_json::from_str(new_json).map_err(|e| PyValueError::new_err(e.to_string()))?;
+    Ok(serde_json::to_string(&diff::diff(&old, &new)).expect("changes serialize"))
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[pymodule]
+fn schemasync_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(parse_schema_json, m)?)?;
+    m.add_function(wrap_pyfunction!(diff_json, m)?)?;
+    Ok(())
 }

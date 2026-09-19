@@ -1,0 +1,7 @@
+[
+  {
+    "kind": "AddForeignKey",
+    "table": "orders",
+    "fk": { "columns": ["user_id"], "ref_table": "users", "ref_columns": ["id"] }
+  }
+]

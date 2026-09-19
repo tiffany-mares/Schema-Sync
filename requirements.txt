@@ -1,0 +1,12 @@
+# Top-level Python deps (installed into the root .venv with uv).
+# torch is installed CPU-only: uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+maturin
+fastapi
+uvicorn
+asyncpg
+pymongo>=4.9
+redis
+httpx
+torch
+sentence-transformers
+jiuwenswarm

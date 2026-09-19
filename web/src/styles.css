@@ -62,47 +62,49 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Schibsted Grotesk", -apple-system, "Helvetica Neue", sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, "SF Mono", monospace;
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.15 0.016 260);
-  --foreground: oklch(0.94 0.012 255);
-  --card: oklch(0.19 0.018 255 / 80%);
-  --card-foreground: oklch(0.94 0.012 255);
-  --popover: oklch(0.2 0.02 255);
-  --popover-foreground: oklch(0.94 0.012 255);
-  --primary: oklch(0.72 0.17 278);
-  --primary-foreground: oklch(0.12 0.02 260);
-  --secondary: oklch(0.25 0.025 255);
-  --secondary-foreground: oklch(0.91 0.012 255);
-  --muted: oklch(0.22 0.018 255);
-  --muted-foreground: oklch(0.67 0.025 255);
-  --accent: oklch(0.28 0.035 260);
-  --accent-foreground: oklch(0.96 0.01 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.72 0.17 278);
-  --success: oklch(0.72 0.18 145);
-  --success-foreground: oklch(0.13 0.025 145);
-  --panel: oklch(0.19 0.018 255 / 80%);
-  --panel-strong: oklch(0.205 0.02 255 / 94%);
-  --canvas-node: oklch(0.29 0.025 255);
-  --canvas-dot: oklch(0.65 0.025 255 / 30%);
-  --canvas-mask: oklch(0.15 0.016 260 / 78%);
-  --diff-added: oklch(0.72 0.18 145);
-  --diff-dropped: oklch(0.68 0.22 25);
-  --diff-modified: oklch(0.74 0.15 75);
-  --diff-renamed: oklch(0.72 0.15 250);
-  --agent-leader: oklch(0.76 0.16 295);
-  --agent-analyst: oklch(0.79 0.14 205);
-  --agent-impact: oklch(0.75 0.17 340);
-  --agent-migration: oklch(0.76 0.17 55);
-  --agent-release: oklch(0.82 0.19 125);
+  /* Recompile-inspired palette: warm ink charcoal, cream text, gold accent,
+     with moss/teal/blossom/burnt-orange as the supporting family. */
+  --radius: 0.75rem;
+  --background: oklch(0.2 0.006 106);
+  --foreground: oklch(0.96 0.014 90);
+  --card: oklch(0.24 0.007 106 / 82%);
+  --card-foreground: oklch(0.96 0.014 90);
+  --popover: oklch(0.25 0.008 106);
+  --popover-foreground: oklch(0.96 0.014 90);
+  --primary: oklch(0.79 0.084 83);
+  --primary-foreground: oklch(0.22 0.006 106);
+  --secondary: oklch(0.28 0.009 106);
+  --secondary-foreground: oklch(0.93 0.014 90);
+  --muted: oklch(0.27 0.009 106);
+  --muted-foreground: oklch(0.72 0.022 95);
+  --accent: oklch(0.31 0.012 106);
+  --accent-foreground: oklch(0.97 0.012 90);
+  --destructive: oklch(0.6 0.14 35);
+  --destructive-foreground: oklch(0.97 0.012 90);
+  --border: oklch(0.97 0.014 90 / 11%);
+  --input: oklch(0.97 0.014 90 / 13%);
+  --ring: oklch(0.79 0.084 83);
+  --success: oklch(0.72 0.1 130);
+  --success-foreground: oklch(0.2 0.02 130);
+  --panel: oklch(0.24 0.007 106 / 82%);
+  --panel-strong: oklch(0.255 0.008 106 / 95%);
+  --canvas-node: oklch(0.31 0.012 106);
+  --canvas-dot: oklch(0.75 0.02 95 / 24%);
+  --canvas-mask: oklch(0.2 0.006 106 / 80%);
+  --diff-added: oklch(0.73 0.1 130);
+  --diff-dropped: oklch(0.63 0.14 35);
+  --diff-modified: oklch(0.79 0.084 83);
+  --diff-renamed: oklch(0.68 0.055 215);
+  --agent-leader: oklch(0.79 0.084 83);
+  --agent-analyst: oklch(0.68 0.06 215);
+  --agent-impact: oklch(0.71 0.1 15);
+  --agent-migration: oklch(0.67 0.13 50);
+  --agent-release: oklch(0.73 0.1 130);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -275,3 +277,67 @@
 .anim-up { animation: card-up .35s ease-out; }
 @keyframes msg-in { from { opacity: 0; transform: translateY(12px); } }
 @keyframes card-up { from { opacity: 0; transform: translateY(60px); } }
+
+/* ---- Recompile-style detail layer: editorial warmth, terminal labels ---- */
+
+/* bracketed uppercase mono kickers, the site's signature label style */
+.section-kicker {
+  font-family: var(--font-mono);
+  letter-spacing: .16em;
+  color: color-mix(in oklch, var(--primary), var(--muted-foreground) 35%);
+}
+.section-kicker::before { content: "[ "; }
+.section-kicker::after { content: " ]"; }
+
+/* pills everywhere: chips, statuses, repo/compare capsules */
+.repo-pill, .compare-pill, .status-chip, .canvas-summary span, .chip {
+  border-radius: 999px;
+}
+.status-chip { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+.compare-pill i { border-radius: 999px; }
+.beta { border-radius: 999px; font-family: var(--font-mono); }
+
+/* buttons become warm pills; the primary action is solid gold on ink */
+.top-actions button, .review-actions button, .commit-drawer-footer button {
+  border-radius: 999px;
+}
+.gradient-button {
+  background: var(--primary);
+  animation: none;
+  color: var(--primary-foreground);
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 45%), 0 14px 26px -14px color-mix(in oklch, var(--primary), transparent 40%);
+}
+.gradient-button:hover { filter: brightness(1.06); }
+
+/* hairline cards, softer larger shadows — Recompile's card language */
+.glass-panel {
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 5%), 0 30px 60px -30px oklch(0.1 0.01 106 / 55%);
+}
+.table-node, .schema-table { border-radius: 14px; }
+.message-card { border-radius: 12px; background: oklch(1 0 0 / 2.5%); }
+.approval-card { border-radius: 14px; }
+
+/* warm ambient field: gold + moss + teal, quieter than the old neon */
+.ambient-mesh i { opacity: .09; }
+.ambient-mesh i:nth-child(2) { opacity: .05; }
+
+/* display type: tight tracking like Recompile's headings */
+.canvas-heading h1 { letter-spacing: -0.02em; font-family: var(--font-sans); font-weight: 700; font-size: 16px; }
+.brand strong { letter-spacing: -0.02em; font-weight: 800; }
+.review-header h2 { letter-spacing: -0.015em; }
+
+/* terminal-flavored feed metadata */
+.msg-kind, .agent-label span { font-family: var(--font-mono); }
+.timeline-label span { font-family: var(--font-mono); letter-spacing: .14em; }
+.left-sidebar section h3 { font-family: var(--font-mono); letter-spacing: .16em; }
+
+/* SQL blocks: deep warm ink with cream text, gold keywords feel */
+.message-card pre { background: oklch(0.16 0.005 106); color: oklch(0.9 0.03 95); }
+.commit-editor-pane .cm-editor { background: oklch(0.17 0.005 106); }
+
+/* waveform-esque sidebar health dot pulses gold */
+.sidebar-health i { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: health-pulse 2.4s ease-in-out infinite; }
+.sidebar-health strong { color: var(--primary); }
+@keyframes health-pulse { 50% { opacity: .45; } }

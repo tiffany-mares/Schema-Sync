@@ -1,122 +1,67 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useCallback, useEffect, useState } from "react";
+import { fetchBranches, fetchDiff } from "./api";
+import { buildView, type TableView } from "./diffView";
+import { SchemaFlow } from "./SchemaFlow";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+const REPO = "demo";
+
+export default function App() {
+  const [branches, setBranches] = useState<string[]>([]);
+  const [from, setFrom] = useState("main");
+  const [to, setTo] = useState("main");
+  const [view, setView] = useState<TableView[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const compare = useCallback(async (fromBranch: string, toBranch: string) => {
+    try {
+      setError(null);
+      const diff = await fetchDiff(REPO, fromBranch, toBranch);
+      setView(buildView(diff.from_schema, diff.to_schema));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBranches(REPO)
+      .then((bs) => {
+        setBranches(bs.map((b) => b.name));
+        void compare("main", "main");
+      })
+      .catch((e) => setError((e as Error).message));
+  }, [compare]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="app">
+      <header className="toolbar">
+        <span className="brand">SchemaSync</span>
+        <label>
+          base
+          <select value={from} onChange={(e) => setFrom(e.target.value)}>
+            {branches.map((b) => (
+              <option key={b}>{b}</option>
+            ))}
+          </select>
+        </label>
+        <span className="arrow">{"→"}</span>
+        <label>
+          compare
+          <select value={to} onChange={(e) => setTo(e.target.value)}>
+            {branches.map((b) => (
+              <option key={b}>{b}</option>
+            ))}
+          </select>
+        </label>
+        <button onClick={() => void compare(from, to)}>Compare</button>
+        <span className="legend">
+          <span className="chip added">added</span>
+          <span className="chip dropped">dropped</span>
+          <span className="chip modified">modified</span>
+        </span>
+        {error && <span className="error">{error}</span>}
+      </header>
+      <main className="canvas">{view && <SchemaFlow tables={view} />}</main>
+    </div>
+  );
 }
-
-export default App

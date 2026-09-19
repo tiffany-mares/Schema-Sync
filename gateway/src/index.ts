@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { MongoClient } from "mongodb";
+import { createClient } from "redis";
 import { WebSocketServer } from "ws";
 
 const PORT = +(process.env.PORT ?? 3000);
@@ -78,5 +79,22 @@ async function relayAgentBoard() {
 }
 
 relayAgentBoard().catch((err) => console.error("mongo connect failed:", err.message));
+
+// CI status stream: the migrator publishes start/result per merge request.
+async function relayCiEvents() {
+  const sub = createClient({ url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379" });
+  sub.on("error", (err) => console.error("redis error:", err.message));
+  await sub.connect();
+  await sub.pSubscribe("ci:*", (message, channel) => {
+    try {
+      broadcast({ type: "ci", channel, data: JSON.parse(message) });
+    } catch {
+      broadcast({ type: "ci", channel, data: message });
+    }
+  });
+  console.log("ci:* redis relay open");
+}
+
+relayCiEvents().catch((err) => console.error("redis connect failed:", err.message));
 
 server.listen(PORT, () => console.log(`gateway on :${PORT}`));

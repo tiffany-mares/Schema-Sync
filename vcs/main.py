@@ -254,6 +254,31 @@ async def get_merge_request(repo: str, mr_id: int):
     return dict(row)
 
 
+class ColumnRef(BaseModel):
+    table: str
+    column: str
+    type_name: str | None = None
+
+
+class RenamesIn(BaseModel):
+    drops: list[ColumnRef]
+    adds: list[ColumnRef]
+
+
+@app.post("/tools/renames")
+async def renames(body: RenamesIn):
+    from starlette.concurrency import run_in_threadpool
+
+    from vcs.renames import detect_renames
+
+    pairs = await run_in_threadpool(
+        detect_renames,
+        [c.model_dump() for c in body.drops],
+        [c.model_dump() for c in body.adds],
+    )
+    return {"pairs": pairs}
+
+
 @app.get("/health")
 async def health():
     return {"ok": True}

@@ -5,7 +5,8 @@ services:
       POSTGRES_PASSWORD: dev
       POSTGRES_DB: schemasync
     ports:
-      - "5432:5432"
+      # 5434 on the host: a native PostgreSQL service already owns 5432.
+      - "5434:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -36,6 +37,20 @@ services:
       timeout: 2s
       retries: 15
 
+  # Local stand-in for MongoDB Atlas until ATLAS_URI is set: a single-node
+  # replica set, which is what enables change streams. Swap by setting
+  # ATLAS_URI in .env; no code changes.
+  mongo:
+    image: mongo:7
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "try { rs.status().ok } catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   # Service containers (vcs, migrator, agents, gateway, web) are added as
   # their Dockerfiles come into existence in later phases. During the build,
-  # services run on the host against these three containers.
+  # services run on the host against these containers.

@@ -24,3 +24,6 @@ migrator/*.exe
 # Misc
 .DS_Store
 *.log
+
+# Service logs from start-stack
+infra/logs/

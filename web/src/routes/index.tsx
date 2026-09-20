@@ -12,9 +12,9 @@ import type { Branch, Change, Commit, MergeRequest, Schema } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "SchemaSync — Database changes, reviewed" },
+    { title: "SchemaSync: Database changes, reviewed" },
     { name: "description", content: "Visual database schema diffs and live AI migration reviews." },
-    { property: "og:title", content: "SchemaSync — Database changes, reviewed" },
+    { property: "og:title", content: "SchemaSync: Database changes, reviewed" },
     { property: "og:description", content: "Visual database schema diffs and live AI migration reviews." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

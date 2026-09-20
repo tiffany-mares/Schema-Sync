@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dagre from "@dagrejs/dagre";
 import {
   Background,
@@ -6,7 +6,6 @@ import {
   BaseEdge,
   Controls,
   Handle,
-  MiniMap,
   Position,
   ReactFlow,
   getSmoothStepPath,
@@ -158,22 +157,12 @@ export function SchemaCanvas({ schema, changes, focusedRef, compact = false, pla
     return { nodes, edges };
   }, [schema, changes, focusedRef, intro, introDelay]);
 
-  const addedTables = useMemo(
-    () => new Set(changes.filter((change) => change.op === "AddTable").map((change) => change.table.name)),
-    [changes],
-  );
-  const colorNode = useCallback(
-    (node: Node) => (addedTables.has(node.id) ? "var(--diff-added)" : "var(--canvas-node)"),
-    [addedTables],
-  );
-
   return (
     <div className="relative h-full w-full overflow-hidden">
       <ReactFlow nodes={graph.nodes} edges={graph.edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} fitView fitViewOptions={{ padding: compact ? 0.24 : 0.14 }} minZoom={0.25} maxZoom={1.6} proOptions={{ hideAttribution: true }} nodesDraggable={!compact} nodesConnectable={false} panOnDrag={!compact} zoomOnScroll={!compact}>
         <FocusController focusedRef={focusedRef} nodes={graph.nodes} />
         <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="var(--canvas-dot)" />
         {!compact && <Controls position="top-right" showInteractive={false} />}
-        {!compact && <MiniMap position="bottom-right" pannable zoomable nodeColor={colorNode} maskColor="var(--canvas-mask)" />}
       </ReactFlow>
       {!compact && <div className="diff-legend" aria-label="Diff legend">
         <span><i className="legend-dot added" />+ Added</span>

@@ -1,8 +1,20 @@
 import express from "express";
+import { readFileSync } from "fs";
 import { createServer } from "http";
 import { MongoClient } from "mongodb";
+import { join } from "path";
 import { createClient } from "redis";
 import { WebSocketServer } from "ws";
+
+// Minimal repo-root .env loader (ATLAS_URI etc.); real env vars win.
+try {
+  for (const line of readFileSync(join(import.meta.dirname, "..", "..", ".env"), "utf8").split("\n")) {
+    const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (match && match[1] && !(match[1] in process.env) && match[2]) process.env[match[1]] = match[2];
+  }
+} catch {
+  // no .env is fine — defaults point at local containers
+}
 
 const PORT = +(process.env.PORT ?? 3000);
 const VCS_URL = process.env.VCS_URL ?? "http://127.0.0.1:8000";

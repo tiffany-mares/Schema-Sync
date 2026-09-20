@@ -2,6 +2,7 @@
 # torch is installed CPU-only: uv pip install torch --index-url https://download.pytorch.org/whl/cpu
 maturin
 fastapi
+python-dotenv
 uvicorn
 asyncpg
 pymongo>=4.9
